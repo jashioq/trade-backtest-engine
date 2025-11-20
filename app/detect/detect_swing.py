@@ -1,15 +1,17 @@
-from typing import List, Tuple
+from typing import List
 import pandas as pd
+from app.detect.model.swing import Swing, BullishSwing, BearishSwing
 
-def detect_price_swings(
+def detect_swing(
     df: pd.DataFrame,
     min_length: int = 3,
     min_size_points: float = 0.0
-) -> List[Tuple[pd.Timestamp, pd.Timestamp, str, float, float]]:
+) -> List[Swing]:
+
     if len(df) < min_length:
         return []
 
-    swings = []
+    swings: List[Swing] = []
     high = df['High'].values
     low = df['Low'].values
     idx = df.index
@@ -31,7 +33,12 @@ def detect_price_swings(
             move_size = swing_high - swing_low
 
             if length >= min_length and move_size >= min_size_points:
-                swings.append((idx[start_idx], idx[end_idx], "bullish", swing_high, swing_low))
+                swings.append(BullishSwing(
+                    start=idx[start_idx],
+                    end=idx[end_idx],
+                    high=swing_high,
+                    low=swing_low
+                ))
 
             i = end_idx + 1
             continue
@@ -51,11 +58,17 @@ def detect_price_swings(
             move_size = swing_high - swing_low
 
             if length >= min_length and move_size >= min_size_points:
-                swings.append((idx[start_idx], idx[end_idx], "bearish", swing_high, swing_low))
+                swings.append(BearishSwing(
+                    start=idx[start_idx],
+                    end=idx[end_idx],
+                    high=swing_high,
+                    low=swing_low
+                ))
 
             i = end_idx + 1
             continue
 
         i += 1
 
+    print(f"Found {len(swings)} swings")
     return swings

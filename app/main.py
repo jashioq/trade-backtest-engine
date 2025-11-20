@@ -1,72 +1,67 @@
 import pandas as pd
 
-from app.detect.swing import detect_price_swings
+from app.detect.detect_fvg import detect_fvg
+from app.detect.detect_swing import detect_swing
+from app.vis.model.drawable import Drawable
 from data.load import load_candles
-from detect.fvg import detect_fvg_starts
-from vis.render import plot_candles
+from vis.render import render
+
 
 if __name__ == "__main__":
     start_time = pd.Timestamp("2025-10-29 09:30:00")
     end_time   = pd.Timestamp("2025-10-29 12:00:00")
 
-    min_fvg_size = 5
-    min_swing_length = 3
-    min_swing_points = 30
+    min_fvg_size       = 5.0
+    min_swing_length   = 3
+    min_swing_points   = 30.0
+
     df = load_candles(start_time, end_time)
-    fvgs   = detect_fvg_starts(df, min_size=min_fvg_size)
-    swings = detect_price_swings(df, min_length=min_swing_length, min_size_points=min_swing_points)
 
-    print(f"Detected {len(fvgs)} FVGs and {len(swings)} price swings\n")
+    fvgs   = detect_fvg(df, min_size=min_fvg_size)
+    swings = detect_swing(df, min_length=min_swing_length, min_size_points=min_swing_points)
 
-    fvg_lines = []
-    fvg_colors = []
-    fvg_styles = []
-    fvg_widths = []
+    drawables = []
 
-    for start_ts, size, fvg_type in fvgs:
-        i = df.index.get_loc(start_ts)
-        high_1 = df['High'].iloc[i]
-        low_1  = df['Low'].iloc[i]
-        low_3  = df['Low'].iloc[i + 2]
-        high_3 = df['High'].iloc[i + 2]
+    for fvg in fvgs:
+        color = "limegreen" if fvg.__class__.__name__ == "Bisi" else "crimson"
+        end_time = fvg.start + pd.Timedelta(minutes=5)
 
-        if fvg_type == "Bullish":
-            bottom, top = high_1, low_3
-            color = "limegreen"
-        else:
-            bottom, top = high_3, low_1
-            color = "crimson"
-
-        end_ts = start_ts + pd.Timedelta(minutes=5)
-
-        fvg_lines.extend([
-            (start_ts, bottom, end_ts, bottom),
-            (start_ts, top,    end_ts, top)
+        drawables.extend([
+            Drawable.horizontal_line(
+                start_time=fvg.start,
+                end_time=end_time,
+                price=fvg.low,
+                color=color,
+                width=3.5
+            ),
+            Drawable.horizontal_line(
+                start_time=fvg.start,
+                end_time=end_time,
+                price=fvg.high,
+                color=color,
+                width=3.5
+            ),
         ])
-        fvg_colors.extend([color, color])
-        fvg_styles.extend(["-", "-"])
-        fvg_widths.extend([3.5, 3.5])
 
-    swing_rects   = []
-    swing_colors  = ["royalblue"] * len(swings)
-    swing_styles  = ["--"] * len(swings)
-    swing_widths  = [1.6] * len(swings)
+    for swing in swings:
+        drawables.extend(
+            Drawable.rectangle(
+                start_time=swing.start,
+                end_time=swing.end,
+                top=swing.high,
+                bottom=swing.low,
+                color="royalblue",
+                style="--",
+                width=1.6
+            )
+        )
 
-    for start_ts, end_ts, _, sh, sl in swings:
-        swing_rects.append((start_ts, end_ts, sh, sl))
-
-    plot_candles(
+    render(
         df=df,
-        lines=fvg_lines,
-        line_colors=fvg_colors,
-        line_styles=fvg_styles,
-        line_widths=fvg_widths,
-
-        rectangles=swing_rects,
-        rect_colors=swing_colors,
-        rect_styles=swing_styles,
-        rect_widths=swing_widths,
-
+        drawables=drawables,
         filename="chart.png",
-        title=f"{len(fvgs)} FVGs {len(swings)} Swings | FVG size {min_fvg_size}, swing length {min_swing_length}, swing size {min_swing_points}"
+        title=f"{len(fvgs)} FVGs {len(swings)} Swings | "
+              f"FVG size {min_fvg_size}, "
+              f"swing length {min_swing_length}, "
+              f"swing size {min_swing_points}"
     )
