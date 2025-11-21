@@ -11,6 +11,8 @@ class BullishSwing(Swing):
     end: datetime
     high: float
     low: float
+    ote_top: float
+    ote_bottom: float
 
 
 @dataclass(frozen=True, slots=True)
@@ -19,3 +21,5 @@ class BearishSwing(Swing):
     end: datetime
     high: float
     low: float
+    ote_top: float
+    ote_bottom: float

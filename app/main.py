@@ -1,24 +1,32 @@
 import pandas as pd
 
-from app.detect.detect_fvg import detect_fvg
-from app.detect.detect_swing import detect_swing
+from app.detect.detect_fvgs import detect_fvgs
+from app.detect.detect_swings import detect_swings
 from app.vis.model.drawable import Drawable
 from data.load import load_candles
 from vis.render import render
 
-
 if __name__ == "__main__":
-    start_time = pd.Timestamp("2025-10-29 09:30:00")
-    end_time   = pd.Timestamp("2025-10-29 12:00:00")
+    start_time = pd.Timestamp("2025-10-23 09:30:00")
+    end_time = pd.Timestamp("2025-10-23 12:00:00")
 
-    min_fvg_size       = 5.0
-    min_swing_length   = 3
-    min_swing_points   = 30.0
+    min_fvg_size = 5.0
+    min_swing_length = 3
+    min_swing_points = 30.0
 
     df = load_candles(start_time, end_time)
 
-    fvgs   = detect_fvg(df, min_size=min_fvg_size)
-    swings = detect_swing(df, min_length=min_swing_length, min_size_points=min_swing_points)
+    swings = detect_swings(df, min_length=min_swing_length, min_size_points=min_swing_points)
+
+    # Detect FVGs only within swings
+    fvgs = []
+    for swing in swings:
+        # Get the subset of data within this swing's time range
+        swing_df = df.loc[swing.start:swing.end]
+
+        # Detect FVGs only in this swing
+        swing_fvgs = detect_fvgs(swing_df, min_size=min_fvg_size)
+        fvgs.extend(swing_fvgs)
 
     drawables = []
 
@@ -32,14 +40,14 @@ if __name__ == "__main__":
                 end_time=end_time,
                 price=fvg.low,
                 color=color,
-                width=3.5
+                width=2
             ),
             Drawable.horizontal_line(
                 start_time=fvg.start,
                 end_time=end_time,
                 price=fvg.high,
                 color=color,
-                width=3.5
+                width=2
             ),
         ])
 
@@ -52,9 +60,27 @@ if __name__ == "__main__":
                 bottom=swing.low,
                 color="royalblue",
                 style="--",
-                width=1.6
+                width=1
             )
-        )
+        ),
+        drawables.extend([
+            Drawable.horizontal_line(
+                start_time=swing.start,
+                end_time=swing.end,
+                price=swing.ote_top,
+                color="yellow",
+                style=":",
+                width=2
+            ),
+            Drawable.horizontal_line(
+                start_time=swing.start,
+                end_time=swing.end,
+                price=swing.ote_bottom,
+                color="yellow",
+                style=":",
+                width=2
+            ),
+        ])
 
     render(
         df=df,

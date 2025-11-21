@@ -56,8 +56,8 @@ class Drawable:
         width: float = 1.6,
     ) -> List["Drawable"]:
         return [
-            cls.horizontal_line(start_time, end_time, top,    color=color, style=style, width=width),
+            cls.horizontal_line(start_time, end_time, top, color=color, style=style, width=width),
             cls.horizontal_line(start_time, end_time, bottom, color=color, style=style, width=width),
-            cls.vertical_line(start_time, bottom, top,        color=color, style=style, width=width),
-            cls.vertical_line(end_time,   bottom, top,        color=color, style=style, width=width),
+            cls.vertical_line(start_time, bottom, top, color=color, style=style, width=width),
+            cls.vertical_line(end_time, bottom, top, color=color, style=style, width=width),
         ]
