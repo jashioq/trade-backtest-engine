@@ -5,17 +5,20 @@ from typing import Optional
 from datetime import time
 from pathlib import Path
 
+
 @dataclass
 class DateRangeConfig:
     """Configuration for date range filtering."""
     start_date: Optional[str] = None  # Start date (YYYY-MM-DD) or None for no lower bound
     end_date: Optional[str] = None    # End date (YYYY-MM-DD) or None for no upper bound
 
+
 @dataclass
 class TimeRangeConfig:
     """Configuration for daily time range filtering."""
     start_time: time = time(9, 30)   # Start time (e.g., time(9, 30) for 9:30)
     end_time: time = time(16, 0)     # End time (e.g., time(16, 0) for 16:00)
+
 
 def _load_event_dates() -> set:
     """

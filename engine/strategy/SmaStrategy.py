@@ -1,5 +1,6 @@
 import backtrader as bt
 
+
 class SmaStrategy(bt.Strategy):
     params = (
         ('fast_period', 50),  # Fast MA period

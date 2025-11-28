@@ -7,9 +7,10 @@ from engine.data.load import DateRangeConfig, TimeRangeConfig, load
 
 from engine.strategy.SmaStrategy import SmaStrategy
 
+
 # ===== CONFIG =====
 # Load filtered NQ data (NY session: 9:30-16:00 ET)
-date_range = DateRangeConfig(start_date='2024-01-01', end_date='2024-12-30')
+date_range = DateRangeConfig(start_date='2024-01-01', end_date='2024-04-30')
 time_range = TimeRangeConfig(start_time=time(9,30), end_time=time(16,0))
 exclude_event_days = True
 # Set strategy
